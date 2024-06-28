@@ -95,7 +95,7 @@
 
                         var optionNull = document.createElement('option');
                         optionNull.value = '';
-                        optionNull.textContent = 'Seleccione una opción';
+                        optionNull.textContent = 'Seleccione una region';
                         selectRegion.appendChild(optionNull);
 
                         regiones.forEach(function(region) {
@@ -136,7 +136,7 @@
 
                         var optionNull = document.createElement('option');
                         optionNull.value = '';
-                        optionNull.textContent = 'Seleccione una opción';
+                        optionNull.textContent = 'Seleccione una comuna';
                         selectComuna.appendChild(optionNull);
 
                         comunas.forEach(function(comuna) {
@@ -162,7 +162,7 @@
 
                 var optionNull = document.createElement('option');
                 optionNull.value = '';
-                optionNull.textContent = 'Seleccione una region';
+                optionNull.textContent = 'Seleccione una comuna';
                 selectComuna.appendChild(optionNull);
             }
 
@@ -213,9 +213,10 @@
                 /////////checkbox multiple/////////
                 var valores_checkbox = document.querySelectorAll('input[name="CSEDN[]"]:checked');
                 
-                //Validar nombre que no este vacio aunque el required hace lo mismo
-                if(valor_nombre.length <= 0){
-                    errores.push("Nombre y Apellido no puede estar vacio");
+                //Validar nombre que tenga apellido
+                var nombreArray = valor_nombre.split(' ');
+                if (nombreArray.length < 2) {
+                    errores.push("Debe contener un nombre con su apellido");
                 }
 
                 //Validar alias
@@ -236,10 +237,13 @@
                 if(!formatoRut.test(valor_rut)){
                     errores.push("Rut ingresado no valido, no contiene guion.");
                 }
+                if(!validarRut(valor_rut)){
+                    errores.push("Rut ingresado no valido.");
+                }
 
                 //Validar email
                 //Se usa estructura para validar que tenga el arroba, el punto y que no este vacio
-                var formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                var formatoEmail = /^\w+([.-_+]?\w+)*@\w+([.-]?\w+)*(\.\w{2,10})+$/;
                 if (!formatoEmail.test(valor_email)) {
                     errores.push("Email ingresado no tiene formato correcto,favor de ingresar uno como el ejemplo 'ejemplo@ejemplo.ejemplo'.");
                 }
@@ -256,6 +260,37 @@
                 }
                 return true;
             }
+
+            //funcion que verifica que el digito verificador este correcto
+            function validarRut(rut) {
+                //elimino el guion asi dejo un string de pueros numeros
+                rut = rut.replace('-', '');
+                
+                //separo el digito verificador del string y asi obtengo el numero sin digito y el digito
+                var numeroSinDigito = rut.slice(0, -1);
+                var digitoVerificador = rut.slice(-1).toUpperCase();
+                var suma = 0;
+                var multiplicador = 2;
+
+                //recorro el numero sin digito haciendo la sumatoria asi obteniendo el multiplicador requerido
+                for (var i = numeroSinDigito.length - 1; i >= 0; i--) {
+                    suma += multiplicador * parseInt(numeroSinDigito.charAt(i));
+                    multiplicador = multiplicador < 7 ? multiplicador + 1 : 2;
+                }
+
+                //ya recorrido el numero sin digito se realzia ecuacion de verificacion de digito verificador para luego ver los casos especiales como lo son el - k y - 0
+                var digitoVerificadoReal = 11 - (suma % 11);
+                if (digitoVerificadoReal === 10) {
+                    digitoVerificadoReal = 'K';
+                } else if (digitoVerificadoReal === 11) {
+                    digitoVerificadoReal = '0';
+                } else {
+                    digitoVerificadoReal = digitoVerificadoReal.toString();
+                }
+                //compara el rut entregado con el que deberia haber llegado respecto a su digito verificador
+                return digitoVerificadoReal === digitoVerificador;
+            }
+
             //enviar los datos a php para subirlos a la base de datos
             var formulario = document.getElementById("votacion")
             formulario.addEventListener('submit', function(event){
