@@ -214,8 +214,8 @@
                 var valores_checkbox = document.querySelectorAll('input[name="CSEDN[]"]:checked');
                 
                 //Validar nombre que tenga apellido
-                var nombreArray = valor_nombre.split(' ');
-                if (nombreArray.length < 2) {
+                var nombreCompleto = valor_nombre.trim().split(/\s+/);
+                if (nombreCompleto.length < 2 || nombreCompleto.some(parte => parte.length === 0)) {
                     errores.push("Debe contener un nombre con su apellido");
                 }
 
